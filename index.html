@@ -14,9 +14,7 @@
 <body>
 
     <div class="api_info">
-        <p id="weather-info">Loading weather...</p>
-        <div id="conversionRate">Fetching conversion rate...</div><div id="trendSymbol"></div>
-        
+        <p id="weather-info">Loading weather...</p>        
     </div>
     
 
@@ -25,7 +23,7 @@
             <a class="patches" href="patchnote.html"><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.signsallsigns.com%2Fwp-content%2Fuploads%2F2019%2F03%2Famazon-logo-transparent.png&f=1&nofb=1&ipt=f3ed8ce4ad037f34a2f8ae294bd969c132d728d4ceaa97c47a38131038090b66&ipo=images" alt="Amazon Logo" class="amazon-logo"></a>
             
             <img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.pngmart.com%2Ffiles%2F1%2FCoffee-Logo-PNG-Image.png&f=1&nofb=1&ipt=060cedd1d0d1ea28beaf8997e0af5e13c0c676ae5f14187fe35603355c650535&ipo=images" alt="Amazon Logo" class="coffee-logo">
-            <h3 class="dub19">DUB21 Coffee Tracker </h3>
+            <h3 class="dub19">DUB 21 Coffee Tracker </h3>
         </div>
         <h2>Select Coffee Type</h2>
             <button class="button coffee" onclick="selectOption('Americano', 'coffee', this)">Americano</button>
@@ -65,6 +63,12 @@
 	<button class="button extra" onclick="selectOption('Decaff', 'extra', this)">Decaff</button>
        
         <div class="controls">
+            <button class="button full-width" id="exportBtn" onclick="exportData()">Export Data</button>
+            <button class="button full-width" id="exportBtn" onclick="exportCoffeeLists()">Export JSON File. DO NOT USE</button>
+            <button class="button full-width" id="uploadBtn" onclick="triggerFileInput()">Upload Coffee Lists. DO NOT USE</button>
+            <input type="file" id="fileInput" style="display: none;" onchange="uploadCoffeeLists(event)" />
+            
+
         </div>
         <p class="copyright">&copy; 2024 Luiz Smania (@luizsmania). All rights reserved.<br>This website is for personal use only and may not be used for commercial purposes, sales, or redistribution without explicit permission.</p>
     </div>
@@ -84,21 +88,5 @@
     
     <script type="module" src="firebase.js"></script>
 
-
-
-    
-   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const enterButton = document.querySelector('button[onclick="addCoffee()"]');
-        const audio = new Audio('https://raw.githubusercontent.com/luizsmania/CoffeeCounter/main/Success.wav');
-
-        enterButton.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent the default behavior
-                audio.play(); // Play the sound
-            }
-        });
-    });
-   </script>
 </body>
 </html>

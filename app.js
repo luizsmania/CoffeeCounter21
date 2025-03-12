@@ -334,94 +334,6 @@ function selectOption(option, category, buttonElement) {
         if (category === 'extra') selectedExtra = option;
     }
 }
-
-
-
-
-
-
-function checkCoffeeTime() {
-    const currentTime = new Date();
-    const minutes = currentTime.getMinutes();
-    const hours = currentTime.getHours();
-
-    // Check if the minutes equal 7
-    if (minutes === 7) {
-        const coffeeElement = document.querySelector('.coffeetime');
-        
-        // Set the visibility to visible
-        coffeeElement.style.visibility = 'visible';
-
-        // Hide it after 3 seconds
-        setTimeout(() => {
-            coffeeElement.style.visibility = 'hidden';
-        }, 1800); // 3000 milliseconds = 3 seconds
-    }
-}
-
-// Call the function every minute to check for coffee time
-setInterval(checkCoffeeTime, 60000); // 60000 milliseconds = 1 minute
-
-let previousRate = null;
-    
-async function fetchConversionRate() {
-    const apiKey = '13d392b211-efdcd9b941-smmgjh'; // Your actual API key
-    const url = `https://api.fastforex.io/fetch-one?from=EUR&to=BRL&api_key=${apiKey}`;
-
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.error('Response status:', response.status);
-            console.error('Response text:', await response.text());
-            throw new Error('Network response was not ok.');
-        }
-        const data = await response.json();
-        console.log('API Response:', data); // Log the entire response for debugging
-
-        // Access the conversion rate from the correct property
-        if (data.result && data.result.BRL) {
-            const rate = Math.floor(data.result.BRL * 100) / 100; // Truncate to two decimal places
-
-            // Prepare the conversion rate text with the trend symbol
-            let trendSymbol = '📈'; // Initial value
-            let lastTrendSymbol = ''; // Store the last trend symbol
-
-            if (previousRate !== null) {
-                if (rate > previousRate) {
-                    trendSymbol = ' 📈'; // Up arrow symbol
-                    lastTrendSymbol = trendSymbol; // Update last trend symbol
-                } else if (rate < previousRate) {
-                    trendSymbol = ' 📉'; // Down arrow symbol
-                    lastTrendSymbol = trendSymbol; // Update last trend symbol
-                } else {
-                    console.log("No change in rate");
-                    trendSymbol = lastTrendSymbol; // Keep the last trend symbol
-                }
-            }
-
-            // Use trendSymbol as needed
-
-
-            // Update the conversion rate and include the trend symbol
-            document.getElementById('conversionRate').textContent = `1€ = ${rate} BRL${trendSymbol}`;
-
-            // Update previous rate
-            previousRate = rate;
-        } else {
-            console.error('Unexpected response structure:', data);
-            document.getElementById('conversionRate').textContent = 'Invalid response format.';
-        }
-
-    } catch (error) {
-        console.error('Error fetching the conversion rate:', error);
-        document.getElementById('conversionRate').textContent = 'Error fetching conversion rate.';
-    }
-}
-
-// Fetch conversion rate every 2 minutes (120000 milliseconds)
-setInterval(fetchConversionRate, 120000);
-fetchConversionRate(); // Initial call
-
 const apiKey = 'YOUR_API_KEY'; // Replace with your OpenWeatherMap API key
 const city = 'Dublin';
 const url = `https://api.openweathermap.org/data/2.5/weather?q=Dublin&appid=604b3b10dc1bd50d0c79ac19718d5c7e&units=metric`;
@@ -459,30 +371,119 @@ setTimeout(() => {
     location.reload();
 }, 7200000); // 2 hours in milliseconds == 7200000
 
-const repoOwner = 'luizsmania';   // Replace with your GitHub username
-const repoName = 'CoffeeCounter';   // Replace with your GitHub repository name
-let lastCommit = null;
+/// Function to export all coffee lists to a JSON file
+function exportCoffeeLists() {
+    const allCoffeeData = {};
 
-async function checkForNewCommit() {
-  try {
-    // Fetch the latest commit info from the GitHub API
-    const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/commits?per_page=1`);
-    const commits = await response.json();
+    // Get all coffee lists from localStorage
+    Object.keys(localStorage)
+        .filter(key => key.startsWith('coffeeList_'))
+        .forEach(key => {
+            allCoffeeData[key] = JSON.parse(localStorage.getItem(key));
+        });
 
-    // Get the latest commit hash
-    const latestCommit = commits[0].sha;
-
-    // If the commit hash is different from the one we have stored, refresh the page
-    if (lastCommit && latestCommit !== lastCommit) {
-      window.location.reload();  // Refresh the page
-    }
-
-    // Store the latest commit hash
-    lastCommit = latestCommit;
-  } catch (error) {
-    console.error('Error checking for new commit:', error);
-  }
+    // Create a JSON file from the data
+    const blob = new Blob([JSON.stringify(allCoffeeData, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'coffeeLists.json'; // Name of the downloaded file
+    link.click();
 }
 
-// Poll every 60 seconds (60000 ms)
-setInterval(checkForNewCommit, 60000);
+// Function to trigger file input (for uploading JSON data)
+function triggerFileInput() {
+    document.getElementById('fileInput').click();
+}
+
+// Function to handle the uploaded JSON file
+function uploadCoffeeLists(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                const uploadedData = JSON.parse(e.target.result);
+
+                // Clear existing coffee lists from localStorage
+                Object.keys(localStorage)
+                    .filter(key => key.startsWith('coffeeList_'))
+                    .forEach(key => localStorage.removeItem(key));
+
+                // Store the uploaded data back into localStorage
+                Object.keys(uploadedData).forEach(key => {
+                    localStorage.setItem(key, JSON.stringify(uploadedData[key]));
+                });
+
+                // Reload the coffee list for today
+                selectedDate = getFormattedDate(new Date());
+                loadCoffeeList(selectedDate);
+                updateCoffeeList();
+
+                alert("Coffee lists have been uploaded successfully!");
+            } catch (error) {
+                alert("Error parsing the uploaded file.");
+                console.error("Error parsing the uploaded file:", error);
+            }
+        };
+
+        reader.readAsText(file);
+    }
+}
+
+function exportData() {
+    let coffeeCount = {};
+    let milkCount = {};
+    let syrupCount = {};
+    let extraCount = {};
+
+    coffeeList.forEach(function(row) {
+        if (row.coffee !== 'No Coffee Selected') {
+            coffeeCount[row.coffee] = (coffeeCount[row.coffee] || 0) + 1;
+        }
+        if (row.milk !== 'Regular Milk') {
+            milkCount[row.milk] = (milkCount[row.milk] || 0) + 1;
+        }
+        if (row.syrup !== 'No Syrup') {
+            syrupCount[row.syrup] = (syrupCount[row.syrup] || 0) + 1;
+        }
+        if (row.extra !== 'No Extra') {
+            extraCount[row.extra] = (extraCount[row.extra] || 0) + 1;
+        }
+    });
+
+    let csvContent = "data:text/csv;charset=utf-8,Coffee - Count\n";
+    for (const coffee in coffeeCount) {
+        csvContent += `${coffee}=${coffeeCount[coffee]}\n`;
+    }
+
+    csvContent += "\nMilk - Count\n";
+    for (const milk in milkCount) {
+        csvContent += `${milk}=${milkCount[milk]}\n`;
+    }
+
+    csvContent += "\nSyrup - Count\n";
+    for (const syrup in syrupCount) {
+        csvContent += `${syrup}=${syrupCount[syrup]}\n`;
+    }
+
+    csvContent += "\nExtra - Count\n";
+    for (const extra in extraCount) {
+        csvContent += `${extra}=${extraCount[extra]}\n`;
+    }
+
+    // Get the selected date from the dropdown
+    const selectedDate = document.getElementById('dateDropdown').value; // Get selected date
+    const formattedDate = selectedDate.replace(/-/g, '/'); // Change format to DD/MM/YYYY or keep it as is based on your needs
+
+    // Create the filename with the formatted date
+    const filename = `${formattedDate} Coffee Log.csv`;
+
+    // Encode CSV content and trigger download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename); // Use the generated filename
+    document.body.appendChild(link);
+    link.click();
+}
