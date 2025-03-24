@@ -431,7 +431,7 @@ function uploadCoffeeLists(event) {
     }
 }
 
-function exportData() {
+function exportToday() {
     let coffeeCount = {};
     let milkCount = {};
     let syrupCount = {};
@@ -487,3 +487,4 @@ function exportData() {
     document.body.appendChild(link);
     link.click();
 }
+
