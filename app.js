@@ -10,6 +10,7 @@ let selectedDate = getFormattedDate(new Date()); // Initialize selectedDate to t
 // Load the saved coffee list for the current day when the page is loaded
 window.onload = function() {
     // Load the saved coffee list for the current day
+    deleteOldCoffeeLists();
     loadCoffeeList(selectedDate);
     updateDateDropdown();
     updateCoffeeList();
@@ -501,6 +502,23 @@ function uploadCoffeeLists(event) {
 
         reader.readAsText(file);
     }
+}
+
+function deleteOldCoffeeLists() {
+    const now = new Date();
+
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('coffeeList_')) {
+            const dateStr = key.replace('coffeeList_', '');
+            const [day, month, year] = dateStr.split('/').map(Number);
+            const entryDate = new Date(year, month - 1, day);
+
+            const diffInDays = (now - entryDate) / (1000 * 60 * 60 * 24);
+            if (diffInDays > 30) {
+                localStorage.removeItem(key);
+            }
+        }
+    });
 }
 
 function exportToday() {
